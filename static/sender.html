@@ -138,7 +138,21 @@
                 this.connectionId = this.generateConnectionId();
                 this.roomMode = '1onN';
 
+                this.config = null;
                 this.initializeEventListeners();
+                this.loadConfig();
+            }
+
+            async loadConfig() {
+                try {
+                    const response = await fetch('/api/config');
+                    if (response.ok) {
+                        this.config = await response.json();
+                        console.log('Config loaded:', this.config);
+                    }
+                } catch (e) {
+                    console.error('Failed to load config:', e);
+                }
             }
 
             initializeEventListeners() {
@@ -152,7 +166,7 @@
                     this.updateStatus('カメラを起動中...', 'info');
 
                     const constraints = {
-                        video: {
+                        video: this.config?.video_constraints || {
                             width: { ideal: 1280 },
                             height: { ideal: 720 }
                         },
@@ -328,7 +342,7 @@
 
             async createPeerConnection(targetPeerId) {
                 const config = {
-                    iceServers: [
+                    iceServers: this.config?.ice_servers || [
                         { urls: 'stun:localhost:3478' }
                     ]
                 };

@@ -147,7 +147,21 @@
                 this.autoConnectMode = false;
                 this.connectionId = this.generateConnectionId();
 
+                this.config = null;
                 this.initializeEventListeners();
+                this.loadConfig();
+            }
+
+            async loadConfig() {
+                try {
+                    const response = await fetch('/api/config');
+                    if (response.ok) {
+                        this.config = await response.json();
+                        console.log('Config loaded:', this.config);
+                    }
+                } catch (e) {
+                    console.error('Failed to load config:', e);
+                }
             }
 
             initializeEventListeners() {
@@ -325,7 +339,7 @@
                 }
 
                 const config = {
-                    iceServers: [
+                    iceServers: this.config?.ice_servers || [
                         { urls: 'stun:localhost:3478' }
                     ]
                 };

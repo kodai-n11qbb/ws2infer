@@ -12,11 +12,14 @@ mod room;
 mod stun;
 mod turn;
 mod signaling;
+mod config;
 
 use room::{Room, RoomManager};
 use signaling::SignalingMessage;
 use stun::StunServer;
 use turn::TurnServer;
+use config::Config;
+use std::net::SocketAddr;
 
 // Type alias for Clients map: connection_id -> sender channel
 type Clients = Arc<RwLock<HashMap<String, mpsc::UnboundedSender<Message>>>>;
@@ -35,9 +38,26 @@ async fn main() -> anyhow::Result<()> {
     
     info!("Starting Cam2WebRTC Signaling Server...");
 
+    let config = Config::load("config.json").unwrap_or_else(|e| {
+        error!("Failed to load config.json: {}. Using defaults.", e);
+        Config {
+            signaling_addr: "0.0.0.0:8080".to_string(),
+            stun_addr: "0.0.0.0:3478".to_string(),
+            turn_addr: "0.0.0.0:3479".to_string(),
+            ice_servers: vec![config::IceServerConfig { urls: vec!["stun:localhost:3478".to_string()] }],
+            video_constraints: serde_json::json!({
+                "width": { "ideal": 1280 },
+                "height": { "ideal": 720 }
+            }),
+        }
+    });
+
+    let config_arc = Arc::new(config);
+
     // Start STUN server
+    let stun_config = config_arc.clone();
     tokio::task::spawn(async move {
-        let stun_addr = "0.0.0.0:3478".parse().unwrap();
+        let stun_addr: SocketAddr = stun_config.stun_addr.parse().expect("Invalid STUN address");
         match StunServer::new(stun_addr) {
             Ok(mut server) => {
                 info!("Starting STUN server on {}", stun_addr);
@@ -52,8 +72,9 @@ async fn main() -> anyhow::Result<()> {
     });
 
     // Start TURN server
+    let turn_config = config_arc.clone();
     tokio::task::spawn(async move {
-        let turn_addr = "0.0.0.0:3479".parse().unwrap();
+        let turn_addr: SocketAddr = turn_config.turn_addr.parse().expect("Invalid TURN address");
         match TurnServer::new(turn_addr) {
             Ok(mut server) => {
                 info!("Starting TURN server on {}", turn_addr);
@@ -124,7 +145,15 @@ async fn main() -> anyhow::Result<()> {
             }
         });
     
-    let api_routes = create_room_route.or(get_room_route);
+    let config_api = config_arc.clone();
+    let config_route = warp::path("api")
+        .and(warp::path("config"))
+        .and(warp::get())
+        .map(move || {
+            warp::reply::json(&*config_api)
+        });
+
+    let api_routes = create_room_route.or(get_room_route).or(config_route);
     
     // Static file serving for HTML clients
     let static_files = warp::fs::dir("static");
@@ -135,11 +164,12 @@ async fn main() -> anyhow::Result<()> {
         .or(static_files)
         .with(warp::cors().allow_any_origin().allow_methods(vec!["GET", "POST"]));
     
-    info!("Server listening on 0.0.0.0:8080");
+    let addr: SocketAddr = config_arc.signaling_addr.parse().expect("Invalid signaling address");
+    info!("Server listening on {}", addr);
     
     // Start server
     warp::serve(routes)
-        .run(([0, 0, 0, 0], 8080))
+        .run(addr)
         .await;
     
     Ok(())
