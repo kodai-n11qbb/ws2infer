@@ -14,14 +14,14 @@ mod turn;
 mod signaling;
 mod config;
 mod network;
-mod sfu_simple;
+mod high_performance_sfu;
 
 use room::RoomManager;
 use signaling::SignalingMessage;
 use stun::StunServer;
 use turn::TurnServer;
 use config::Config;
-use sfu_simple::SimpleSfuManager;
+use high_performance_sfu::HighPerformanceSfuManager;
 use std::net::SocketAddr;
 use std::fs;
 use rcgen::generate_simple_self_signed;
@@ -100,9 +100,9 @@ async fn main() -> anyhow::Result<()> {
     // Initialize room manager
     let room_manager = Arc::new(RwLock::new(RoomManager::new()));
     
-    // Initialize SFU manager
-    let sfu_manager = Arc::new(SimpleSfuManager::new());
-    info!("Simple SFU Manager initialized");
+    // Initialize High Performance SFU manager
+    let sfu_manager = Arc::new(HighPerformanceSfuManager::new());
+    info!("High Performance SFU Manager initialized - Hardware acceleration enabled");
     
     // Initialize clients map
     let clients = Clients::default();
@@ -119,7 +119,7 @@ async fn main() -> anyhow::Result<()> {
         .and(warp::any().map(move || room_manager_ws.clone()))
         .and(warp::any().map(move || sfu_manager_ws.clone()))
         .and(warp::any().map(move || clients_ws.clone()))
-        .and_then(|room_id: String, ws: warp::ws::Ws, room_manager: Arc<RwLock<RoomManager>>, sfu_manager: Arc<SimpleSfuManager>, clients: Clients| async move {
+        .and_then(|room_id: String, ws: warp::ws::Ws, room_manager: Arc<RwLock<RoomManager>>, sfu_manager: Arc<HighPerformanceSfuManager>, clients: Clients| async move {
             Ok::<_, warp::Rejection>(ws.on_upgrade(move |socket| handle_websocket(socket, room_id, room_manager, sfu_manager, clients)))
         });
     
@@ -236,7 +236,7 @@ async fn handle_websocket(
     socket: WebSocket,
     room_id: String,
     room_manager: Arc<RwLock<RoomManager>>,
-    sfu_manager: Arc<SimpleSfuManager>,
+    sfu_manager: Arc<HighPerformanceSfuManager>,
     clients: Clients,
 ) {
     info!("New WebSocket connection for room: {}", room_id);

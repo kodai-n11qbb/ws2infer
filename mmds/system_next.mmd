@@ -1,22 +1,24 @@
 flowchart TD
   subgraph "Sender (配信者)"
     S[getUserMedia<br/>カメラ/マイク取得]
-    PC_SENDER["PeerConnection<br/>1つのみ"]
+    PC_SENDER["PeerConnection<br/>1つのみ<br/>Hardware Encoding"]
   end
   
-  subgraph "SFU Server (Rust)"
+  subgraph "High Performance SFU Server (Rust)"
     WS[WebSocket Server]
     ROOM[Room管理]
-    SFU["SFU Media Server<br/>ストリーム受信・配信"]
+    SFU["SFU Media Server<br/>Hardware Acceleration<br/>Adaptive Bitrate"]
+    MEDIA_PROC["Media Processor<br/>H264/Hardware Encoder<br/>Quality Controller"]
+    BANDWIDTH["Bandwidth Monitor<br/>Network Adaptation"]
     
     STUN["内蔵STUN Server<br/>UDP:3478"]
     TURN["内蔵TURN Server<br/>UDP:3479"]
   end
   
   subgraph "Viewers (視聴者)"
-    V1[Viewer 1<br/>PeerConnection 1つ]
-    V2[Viewer 2<br/>PeerConnection 1つ]
-    VN[Viewer N<br/>PeerConnection 1つ]
+    V1["Viewer 1<br/>4K 60fps<br/>8Mbps"]
+    V2["Viewer 2<br/>1080p 60fps<br/>3Mbps"]
+    VN["Viewer N<br/>480p 15fps<br/>500kbps"]
   end
 
   %% ストリームの流れ
@@ -32,6 +34,8 @@ flowchart TD
   WS --- ROOM
   WS --- SFU
   ROOM --- SFU
+  SFU --- MEDIA_PROC
+  SFU --- BANDWIDTH
   
   %% ICE/STUN/TURN Flow (Clients connect to SFU)
   PC_SENDER -.->|UDP: ICE Check| STUN
@@ -42,9 +46,12 @@ flowchart TD
   V1 -.->|"UDP: Relay (if needed)"| TURN
   V2 -.->|"UDP: Relay (if needed)"| TURN
   
-  %% SFU Data Flow (Hub-and-Spoke)
-  PC_SENDER -->|WebRTC: Media Stream| SFU
-  SFU -->|WebRTC: Forwarded Stream| V1
-  SFU -->|WebRTC: Forwarded Stream| V2
-  SFU -->|WebRTC: Forwarded Stream| VN
+  %% High Performance SFU Data Flow
+  PC_SENDER -->|WebRTC: Raw Stream| SFU
+  SFU -->|Hardware Encoding| MEDIA_PROC
+  MEDIA_PROC -->|Adaptive Quality| BANDWIDTH
+  BANDWIDTH -->|Optimized Stream| SFU
+  SFU -->|4K 60fps| V1
+  SFU -->|1080p 60fps| V2
+  SFU -->|480p 15fps| VN
 

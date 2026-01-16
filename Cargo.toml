@@ -21,4 +21,9 @@ bytes = "1.0"
 async-trait = "0.1"
 byteorder = "1.4"
 chrono = { version = "0.4", features = ["serde"] }
-# mediasoup = "0.12"
+# mediasoup = "0.12"  # ビルド問題のため一時コメント
+# 高性能SFU実装用 - 依存問題を回避
+# openh264 = "0.6"  # Windowsビルド問題
+# ffmpeg-next = "7.0"  # pkg-config問題
+# WebTransport用 (準備)
+# web-transport = "0.1"
