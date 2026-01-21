@@ -1,0 +1,21 @@
+graph TD
+    A[ONNXモデルロード] --> B[共通グラフ最適化]
+    B --> C{環境判定}
+    
+    C -->|Webブラウザ| D[WASM/WebGL/WebGPU/WebNN]
+    D --> E[単一バックエンド実行]
+    
+    C -->|Apple Silicon| F[CoreML EP<br/>MシリーズNPU間接利用]
+    C -->|Windows| G[DirectML/CPU<br/>NPU対応]
+    C -->|Linux/Windows| H[CUDA/TensorRT/ROCm]
+    C -->|iOS/Android| I[CoreML/NNAPI<br/>デバイスNPU活用]
+    
+    F --> J[mlprogram変換<br/>Neural Engine]
+    H --> K[GetCapability<br/>サブグラフ分割]
+    K --> L[複数EP同時実行]
+    
+    E --> M[InferenceSession.run]
+    J --> M
+    L --> M
+    G --> M
+    I --> M

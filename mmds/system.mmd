@@ -1,0 +1,10 @@
+flowchart TD
+    A[WebSocket Client<br/>ws/wss接続] --> B[Frame Extractor<br/>VideoFrame→Uint8Array]
+    B --> C[Raw Resize<br/>canvas2D 300x300]
+    C --> D[AI Inference<br/>CocoSSD<br/>TensorFlow.js]
+    D --> E[Postprocess<br/>Top-1 label]
+    E --> F[console.log]
+    
+    style A fill:#e1f5fe
+    style D fill:#f3e5f5
+    style F fill:#e8f5e8
