@@ -1,0 +1,45 @@
+graph TD
+    %% ユーザー設定部分
+    A[WebSocket URL設定<br/>ws:// or wss://] --> B[動画ストリーム受信]
+    
+    %% 入力部分
+    B --> C[フレーム抽出]
+    C --> D[前処理<br/>リサイズ/正規化]
+    
+    %% 推論部分（ONNXsystem.mmdから引用）
+    D --> E[ONNXモデルロード]
+    E --> F[共通グラフ最適化]
+    F --> G{環境判定}
+    
+    G -->|Webブラウザ| H[WASM/WebGL/WebGPU/WebNN]
+    H --> I[単一バックエンド実行]
+    
+    G -->|Apple Silicon| J[CoreML EP<br/>MシリーズNPU間接利用]
+    G -->|Windows| K[DirectML/CPU<br/>NPU対応]
+    G -->|Linux/Windows| L[CUDA/TensorRT/ROCm]
+    G -->|iOS/Android| M[CoreML/NNAPI<br/>デバイスNPU活用]
+    
+    J --> N[mlprogram変換<br/>Neural Engine]
+    L --> O[GetCapability<br/>サブグラフ分割]
+    O --> P[複数EP同時実行]
+    
+    I --> Q[InferenceSession.run]
+    N --> Q
+    P --> Q
+    K --> Q
+    M --> Q
+    
+    %% 出力部分
+    Q --> R[推論結果後処理]
+    R --> S[結果フォーマット変換]
+    S --> T[WebSocket出力]
+    T --> U[クライアント送信]
+    
+    %% スタイル定義
+    classDef userInput fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef inference fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef output fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    
+    class A,B,C,D userInput
+    class E,F,G,H,I,J,K,L,M,N,O,P,Q inference
+    class R,S,T,U output
