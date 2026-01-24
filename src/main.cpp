@@ -5,6 +5,7 @@
 #include "websocket_server.h"
 #include "onnx_inference.h"
 #include "environment_detector.h"
+#include "config_loader.h"
 
 std::unique_ptr<WebSocketServer> server;
 std::unique_ptr<ONNXInference> inference;
@@ -22,15 +23,31 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-    // Parse command line arguments
-    std::string ws_url = "ws://localhost:8080";
-    std::string model_path = "model.onnx";
+    // Load configuration
+    Config config;
+    std::string config_path = "config.json";
     
-    if (argc > 1) {
-        ws_url = argv[1];
+    // Check for custom config path
+    for (int i = 1; i < argc - 1; i++) {
+        if (std::string(argv[i]) == "--config") {
+            config_path = argv[i + 1];
+            break;
+        }
     }
-    if (argc > 2) {
-        model_path = argv[2];
+    
+    bool config_loaded = ConfigLoader::load_config(config_path, config);
+    ConfigLoader::print_config(config);
+
+    // Override with command line arguments if provided
+    std::string ws_url = "ws://" + config.server.host + ":" + std::to_string(config.server.port);
+    std::string model_path = config.model.path;
+    
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--ws-url" && i + 1 < argc) {
+            ws_url = argv[i + 1];
+        } else if (std::string(argv[i]) == "--model" && i + 1 < argc) {
+            model_path = argv[i + 1];
+        }
     }
 
     std::cout << "Starting WebSocket ONNX Inference Server" << std::endl;

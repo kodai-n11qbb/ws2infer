@@ -75,6 +75,6 @@ test_images/
 *.tiff
 
 # Configuration files with secrets
-config.json
+# config.json (allowed for this project)
 .env
 .env.local

@@ -35,6 +35,14 @@ include_directories(${ONNXRUNTIME_INCLUDE_DIR})
 
 # Include directories
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+
+# Find nlohmann/json
+find_package(nlohmann_json QUIET)
+if(NOT nlohmann_json_FOUND)
+    message(STATUS "nlohmann_json not found, using header-only version")
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+endif()
 
 # Add executable
 add_executable(ws2infer
@@ -45,6 +53,7 @@ add_executable(ws2infer
     src/onnx_inference.cpp
     src/postprocessor.cpp
     src/environment_detector.cpp
+    src/config_loader.cpp
 )
 
 # Link libraries
