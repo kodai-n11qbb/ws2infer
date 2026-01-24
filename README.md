@@ -207,6 +207,7 @@ ws2infer/
 │   ├── config_loader.cpp   # 設定ファイル読み込み
 │   └── ...
 ├── config.json             # 設定ファイル
+├── requirements.txt        # 依存関係リスト (Homebrew)
 ├── demo_server.cpp         # 基礎動作デモ（依存なし）
 ├── simple_test.cpp         # システムテスト
 ├── test_client.html        # Webテストクライアント
@@ -235,7 +236,14 @@ ws2infer/
 ### インストール (macOS)
 
 ```bash
-brew install opencv onnxruntime cmake
+# Homebrewで依存関係をインストール
+brew install cmake
+
+# requirements.txtに記載の依存関係をインストール
+brew install opencv onnxruntime protobuf openssl openvino gflags ffmpeg openexr
+
+# または、requirements.txtから一括インストール
+cat requirements.txt | xargs brew install
 ```
 
 ### 動作確認

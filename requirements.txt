@@ -1,5 +1,26 @@
 # Build dependencies for macOS (using Homebrew)
+# Core build tools
+cmake
+
+# Computer vision and image processing
 opencv
+ffmpeg
+openexr
+
+# AI/ML inference engines
 onnxruntime
+openvino
+
+# System libraries and tools
 protobuf
 openssl
+gflags
+
+# Additional dependencies for enhanced functionality
+# Uncomment if needed:
+# websockets     # For WebSocket server functionality
+# boost          # For additional C++ libraries
+# hdf5          # For data storage support
+# libjpeg-turbo # For optimized JPEG processing
+# libpng        # For PNG image support
+# libtiff       # For TIFF image support
