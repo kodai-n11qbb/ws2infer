@@ -1,7 +1,7 @@
 {
   "server": {
     "host": "localhost",
-    "port": 8181,
+    "port": 8080,
     "max_connections": 10,
     "buffer_size": 4096
   },
