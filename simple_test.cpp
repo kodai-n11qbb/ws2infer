@@ -93,6 +93,7 @@ private:
     
     void printSummary() {
         std::cout << "System Implementation Complete!" << std::endl;
+        
         std::cout << "\nImplemented Features:" << std::endl;
         std::cout << "✓ WebSocket server with multi-client support" << std::endl;
         std::cout << "✓ Environment detection and optimal backend selection" << std::endl;
@@ -101,14 +102,6 @@ private:
         std::cout << "✓ Real-time inference with CoreML acceleration" << std::endl;
         std::cout << "✓ Post-processing and JSON response formatting" << std::endl;
         std::cout << "✓ Error handling and graceful degradation" << std::endl;
-        
-        std::cout << "\nPerformance Characteristics:" << std::endl;
-        std::cout << "• Language: C++ (Score: 95/100)" << std::endl;
-        std::cout << "• WebSocket: 95/100 performance" << std::endl;
-        std::cout << "• Preprocessing: 98/100 performance" << std::endl;
-        std::cout << "• ONNX Inference: 99/100 performance" << std::endl;
-        std::cout << "• Post-processing: 96/100 performance" << std::endl;
-        std::cout << "• Overall System: 95/100 performance" << std::endl;
         
         std::cout << "\nArchitecture:" << std::endl;
         std::cout << "• Multi-threaded WebSocket server" << std::endl;

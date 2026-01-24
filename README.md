@@ -25,11 +25,14 @@ make -j$(nproc)
 ## 実行方法
 
 ```bash
-# サーバー起動
-./build/ws2infer ws://localhost:8080 model.onnx
+# デモサーバー（基礎動作）
+./demo_server ws://localhost:8080 model.onnx
 
-# テスト
+# システムテスト
 ./simple_test model.onnx
+
+# 本サーバー（要OpenCV）
+./build/ws2infer ws://localhost:8080 model.onnx
 ```
 
 ## クライアント接続
@@ -61,9 +64,11 @@ make -j$(nproc)
 
 ```
 ws2infer/
-├── src/                    # C++ソースコード
-├── mmds/                   # Mermaidシステム図 (設計図)
+├── src/                    # C++本実装
+├── demo_server.cpp         # 基礎動作デモ（依存なし）
+├── simple_test.cpp         # システムテスト
 ├── test_client.html        # Webテストクライアント
+├── mmds/                   # Mermaid設計図
 ├── CMakeLists.txt         # ビルド設定
 ├── build.sh               # ビルドスクリプト
 └── README.md              # このファイル
