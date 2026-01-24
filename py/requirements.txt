@@ -1,9 +1,0 @@
-websockets>=11.0.3
-asyncio-mqtt>=0.13.0
-numpy>=1.24.0
-pillow>=10.0.0
-onnxruntime>=1.16.0
-transformers>=4.35.0
-torch>=2.1.0
-aiohttp>=3.9.0
-python-multipart>=0.0.6

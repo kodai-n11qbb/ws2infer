@@ -1,31 +1,22 @@
-flowchart TD
-    subgraph Client["Client (Browser / App)"]
-        A1["Connect via ws:// or wss://"]
-        A2["Send Input Data (e.g., JSON, image, etc.)"]
-    end
-
-    subgraph ws2infer["ws2infer Server"]
-        B1["WebSocket Handler (ws/wss)"]
-        B2{"Mode: Online or Offline?"}
-        B3["Local Model Inference (Offline Mode)"]
-        B4["Remote API Inference (Online Mode)"]
-        B5["Generate Response Payload"]
-    end
-
-    subgraph ModelStore["AI Resources"]
-        C1["Local Model(s)"]
-        C2["Remote AI API (e.g., Cloud)"]
-    end
-
-    subgraph Output["Result Delivery"]
-        D1["Send Inference Result via WebSocket"]
-        D2["Client Receives & Displays Result"]
-    end
-
-    Client --> B1
-    B1 --> B2
-    B2 -->|Offline| B3 --> C1
-    B2 -->|Online| B4 --> C2
-    B3 --> B5
-    B4 --> B5
-    B5 --> D1 --> D2
+flowchart LR
+    Client[クライアント] --> WS[WebSocket接続]
+    WS --> Server[ws2inferサーバー]
+    Server --> Mode{モード選択}
+    
+    Mode -->|オフライン| Local[ローカルモデル推論]
+    Mode -->|オンライン| Remote[リモートAPI推論]
+    
+    Local --> Models[ONNX/PyTorch/TF]
+    Remote --> APIs[OpenAI/HuggingFace]
+    
+    Models --> Response[レスポンス生成]
+    APIs --> Response
+    
+    Response --> WS
+    WS --> Client
+    
+    style Client fill:#e1f5fe
+    style Server fill:#f3e5f5
+    style Local fill:#e8f5e8
+    style Remote fill:#fff3e0
+    style Response fill:#f1f8e9
