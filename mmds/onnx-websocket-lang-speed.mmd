@@ -1,61 +1,34 @@
 graph TD
-    %% 全体フロー
-    A[WebSocket URL設定<br/>ws:// or wss://] --> B[動画ストリーム受信]
-    B --> C[フレーム抽出]
-    C --> D[前処理<br/>リサイズ/正規化]
-    D --> E[ONNXモデルロード]
-    E --> F[共通グラフ最適化]
-    F --> G{環境判定}
+    %% WebSocket接続 (数人接続想定)
+    WS_CPP[WebSocket<br/>C++: 95] --> PRE_CPP[前処理<br/>C++: 98]
+    WS_RUST[WebSocket<br/>Rust: 90] --> PRE_RUST[前処理<br/>Rust: 88] 
+    WS_GO[WebSocket<br/>Go: 92] --> PRE_GO[前処理<br/>Go: 70]
     
-    %% 推論バックエンド
-    G -->|Webブラウザ<br/>Node.js:65| H[WASM/WebGL<br/>WebGPU/WebNN]
-    G -->|Apple Silicon<br/>C++:99| J[CoreML EP<br/>MシリーズNPU]
-    G -->|Windows<br/>C++:99| K[DirectML/CPU<br/>NPU対応]
-    G -->|Linux/Windows<br/>C++:99| L[CUDA/TensorRT/ROCm]
-    G -->|iOS/Android<br/>C++:99| M[CoreML/NNAPI<br/>デバイスNPU]
+    %% 前処理→ONNX推論
+    PRE_CPP --> ONNX_CPP[ONNX推論<br/>C++: 99]
+    PRE_RUST --> ONNX_RUST[ONNX推論<br/>Rust: 92]
+    PRE_GO --> ONNX_GO[ONNX推論<br/>Go: 68]
     
-    %% 実行パス
-    H --> I[単一バックエンド<br/>Node.js:55]
-    J --> N[mlprogram変換<br/>C++:99]
-    L --> O[GetCapability<br/>C++:99<br/>サブグラフ分割]
-    O --> P[複数EP同時実行<br/>C++:99]
-    K --> Q[InferenceSession.run<br/>C++:99]
-    M --> Q
+    %% 推論→出力
+    ONNX_CPP --> POST_CPP[後処理/出力<br/>C++: 96]
+    ONNX_RUST --> POST_RUST[後処理/出力<br/>Rust: 89]
+    ONNX_GO --> POST_GO[後処理/出力<br/>Go: 93]
     
-    %% 出力
-    I --> R[推論結果後処理]
-    N --> R
-    P --> R
-    Q --> R
-    R --> S[結果フォーマット変換]
-    S --> T[WebSocket出力]
-    T --> U[クライアント送信]
-
-    %% 言語別評価（辛口版）
-    subgraph 総合評価
-        V1[C++<br/>推論:99<br/>総合:95<br/>最強]
-        V2[Rust<br/>推論:92<br/>総合:90<br/>安全速い]
-        V3[Go<br/>推論:68<br/>総合:85<br/>開発速い]
-        V4[Node.js<br/>推論:55<br/>総合:65<br/>遅い]
-        V5[Python<br/>推論:75<br/>総合:55<br/>プロト用]
-    end
+    %% 総合スコア表示
+    TOTAL_CPP[🏆 C++総合: 95] 
+    TOTAL_RUST[Rust総合: 90]
+    TOTAL_GO[Go総合: 85]
     
-    %% ボトルネック警告
-    W1[B -- フレーム抽出 --> C<br/>C++:98 vs Node:50]
-    W2[D -- 前処理 --> E<br/>C++:98 vs Python:60] 
-    W3[R -- 後処理 --> S<br/>C++:96 vs Python:55]
-
-    %% スタイル
-    classDef cpp fill:#c62828,stroke:#d32f2f,stroke-width:3px,color:#fff
-    classDef rust fill:#1976d2,stroke:#1565c0,stroke-width:3px
-    classDef go fill:#388e3c,stroke:#2e7d32,stroke-width:3px
-    classDef node fill:#f57c00,stroke:#ef6c00,stroke-width:3px
-    classDef py fill:#7b1fa2,stroke:#6a1b9a,stroke-width:3px
-    classDef warning fill:#ff9800,stroke:#f57c00,stroke-width:2px
+    POST_CPP -.-> TOTAL_CPP
+    POST_RUST -.-> TOTAL_RUST
+    POST_GO -.-> TOTAL_GO
     
-    class V1 cpp
-    class V2 rust
-    class V3 go
-    class V4 node
-    class V5 py
-    class W1,W2,W3 warning
+    %% スタイル (上位3言語のみ)
+    classDef cpp fill:#ffebee,stroke:#c62828,stroke-width:3px
+    classDef rust fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px  
+    classDef go fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    classDef total fill:#fff3e0,stroke:#ef6c00,stroke-width:4px
+    
+    class WS_CPP,PRE_CPP,ONNX_CPP,POST_CPP,TOTAL_CPP cpp
+    class WS_RUST,PRE_RUST,ONNX_RUST,POST_RUST,TOTAL_RUST rust
+    class WS_GO,PRE_GO,ONNX_GO,POST_GO,TOTAL_GO go
