@@ -1,10 +1,69 @@
-flowchart TD
-    A[WebSocket Client<br/>ws/wss接続] --> B[Frame Extractor<br/>VideoFrame→Uint8Array]
-    B --> C[Raw Resize<br/>canvas2D 300x300]
-    C --> D[AI Inference<br/>CocoSSD<br/>TensorFlow.js]
-    D --> E[Postprocess<br/>Top-1 label]
-    E --> F[console.log]
+graph TD
+    A[WebSocketクライアント] --> B[WebSocketサーバー]
+    B --> C[リクエストハンドラー]
+    C --> D[モデルマネージャー]
     
-    style A fill:#e1f5fe
-    style D fill:#f3e5f5
-    style F fill:#e8f5e8
+    D --> E[ONNXモデルローダー]
+    E --> F[モデルキャッシュ]
+    
+    D --> G[推論エンジン]
+    G --> H[バックエンド選択]
+    
+    H --> I[CPU Execution Provider]
+    H --> J[CUDA Execution Provider]
+    H --> K[CoreML Execution Provider]
+    H --> L[TensorRT Execution Provider]
+    
+    G --> M[前処理]
+    M --> N[データ変換]
+    N --> O[推論実行]
+    O --> P[後処理]
+    P --> Q[結果フォーマット]
+    
+    Q --> R[WebSocketレスポンス]
+    R --> A
+    
+    S[設定管理] --> D
+    T[ロギング] --> C
+    U[ヘルスチェック] --> B
+    
+    V[バッチ処理] --> G
+    W[非同期処理] --> C
+    
+    subgraph "ws2inferコア機能"
+        D
+        G
+        E
+        F
+        H
+    end
+    
+    subgraph "実行プロバイダー"
+        I
+        J
+        K
+        L
+    end
+    
+    subgraph "データフロー"
+        M
+        N
+        O
+        P
+        Q
+    end
+    
+    subgraph "WebSocket通信"
+        A
+        B
+        C
+        R
+    end
+    
+    subgraph "管理機能"
+        S
+        T
+        U
+        V
+        W
+    end
