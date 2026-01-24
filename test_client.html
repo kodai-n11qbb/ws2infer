@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket ONNX Inference Test Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .result { background-color: #e2e3e5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 5px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket ONNX Inference Test Client</h1>
+        
+        <div id="status" class="status disconnected">Disconnected</div>
+        
+        <div>
+            <input type="text" id="wsUrl" value="ws://localhost:8080" placeholder="WebSocket URL">
+            <button onclick="connect()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+        </div>
+        
+        <div>
+            <input type="file" id="imageInput" accept="image/*">
+            <button onclick="sendImage()">Send Image for Inference</button>
+        </div>
+        
+        <div>
+            <button onclick="sendTestConfig()">Send Test Config</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        
+        function updateStatus(message, isConnected) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + (isConnected ? 'connected' : 'disconnected');
+        }
+        
+        function addResult(result) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result';
+            div.innerHTML = '<strong>Result:</strong> ' + JSON.stringify(JSON.parse(result), null, 2);
+            results.appendChild(div);
+        }
+        
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = function(event) {
+                    updateStatus('Connected to ' + url, true);
+                    console.log('WebSocket connected');
+                };
+                
+                ws.onmessage = function(event) {
+                    console.log('Received:', event.data);
+                    addResult(event.data);
+                };
+                
+                ws.onclose = function(event) {
+                    updateStatus('Disconnected', false);
+                    console.log('WebSocket disconnected');
+                };
+                
+                ws.onerror = function(error) {
+                    updateStatus('Error: ' + error, false);
+                    console.error('WebSocket error:', error);
+                };
+                
+            } catch (error) {
+                updateStatus('Error: ' + error.message, false);
+                console.error('Connection error:', error);
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function sendImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Please connect to WebSocket first');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result.split(',')[1]; // Remove data URL prefix
+                
+                const message = {
+                    type: 'frame',
+                    data: base64Data,
+                    timestamp: Date.now()
+                };
+                
+                ws.send(JSON.stringify(message));
+                console.log('Sent image for inference');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        function sendTestConfig() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('Please connect to WebSocket first');
+                return;
+            }
+            
+            const config = {
+                type: 'config',
+                confidence_threshold: 0.5,
+                nms_threshold: 0.4,
+                max_detections: 100
+            };
+            
+            ws.send(JSON.stringify(config));
+            console.log('Sent test config');
+        }
+    </script>
+</body>
+</html>

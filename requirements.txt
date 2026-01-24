@@ -1,0 +1,5 @@
+# Build dependencies for macOS (using Homebrew)
+opencv
+onnxruntime
+protobuf
+openssl
