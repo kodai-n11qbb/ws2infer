@@ -1,69 +1,31 @@
-graph TD
-    A[WebSocketクライアント] --> B[WebSocketサーバー]
-    B --> C[リクエストハンドラー]
-    C --> D[モデルマネージャー]
-    
-    D --> E[ONNXモデルローダー]
-    E --> F[モデルキャッシュ]
-    
-    D --> G[推論エンジン]
-    G --> H[バックエンド選択]
-    
-    H --> I[CPU Execution Provider]
-    H --> J[CUDA Execution Provider]
-    H --> K[CoreML Execution Provider]
-    H --> L[TensorRT Execution Provider]
-    
-    G --> M[前処理]
-    M --> N[データ変換]
-    N --> O[推論実行]
-    O --> P[後処理]
-    P --> Q[結果フォーマット]
-    
-    Q --> R[WebSocketレスポンス]
-    R --> A
-    
-    S[設定管理] --> D
-    T[ロギング] --> C
-    U[ヘルスチェック] --> B
-    
-    V[バッチ処理] --> G
-    W[非同期処理] --> C
-    
-    subgraph "ws2inferコア機能"
-        D
-        G
-        E
-        F
-        H
+flowchart TD
+    subgraph Client["Client (Browser / App)"]
+        A1["Connect via ws:// or wss://"]
+        A2["Send Input Data (e.g., JSON, image, etc.)"]
     end
-    
-    subgraph "実行プロバイダー"
-        I
-        J
-        K
-        L
+
+    subgraph ws2infer["ws2infer Server"]
+        B1["WebSocket Handler (ws/wss)"]
+        B2{"Mode: Online or Offline?"}
+        B3["Local Model Inference (Offline Mode)"]
+        B4["Remote API Inference (Online Mode)"]
+        B5["Generate Response Payload"]
     end
-    
-    subgraph "データフロー"
-        M
-        N
-        O
-        P
-        Q
+
+    subgraph ModelStore["AI Resources"]
+        C1["Local Model(s)"]
+        C2["Remote AI API (e.g., Cloud)"]
     end
-    
-    subgraph "WebSocket通信"
-        A
-        B
-        C
-        R
+
+    subgraph Output["Result Delivery"]
+        D1["Send Inference Result via WebSocket"]
+        D2["Client Receives & Displays Result"]
     end
-    
-    subgraph "管理機能"
-        S
-        T
-        U
-        V
-        W
-    end
+
+    Client --> B1
+    B1 --> B2
+    B2 -->|Offline| B3 --> C1
+    B2 -->|Online| B4 --> C2
+    B3 --> B5
+    B4 --> B5
+    B5 --> D1 --> D2
