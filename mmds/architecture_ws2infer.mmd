@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant Cam as Camera / Stream Source
+    participant GW as WS/WSS Gateway
+    participant INF as Inference Server（リアルタイム言語化）
+    
+    Note over Cam,GW: **同時接続:少人数**
+    Cam->>GW: 高解像度フレーム送信<br/>**(最大解像度/JPEG or H.264)**
+    Note right of GW: 低遅延転送重視
+    
+    Note over Cam,INF: **MODE: Online/Offline**
+    
+    loop 各フレーム処理<br/>**推論速度最適化**
+        Note over GW,INF: **高速フレーム転送**
+        GW->>INF: フレーム転送
+        Note left of INF: **低レイテンシ推論**
+        
+        alt Online Mode (エッジAI)
+            INF->>INF: クラウド/エッジAI高速解析
+            Note right of INF: **外部API or ONNX**
+        else Offline Mode (自作モデル)
+            INF->>INF: 自作モデルで言語化推論
+            Note left of INF: **ローカル軽量モデル**
+        end
+        
+        alt 推論成功 (<100ms)
+            INF-->>GW: 日本語テキストサマリ (JSON)
+        else 推論失敗
+            Note left of INF: **フォールバック:軽量モデル**
+            INF->>INF: 小型モデルで再推論
+            INF-->>GW: 日本語テキストサマリ (JSON)
+        end
+        
+        Note right of INF: **結果永続化**<br/>**DB/ファイル出力**
+        INF->>INF: 推論結果を保存<br/>(Redis/DB/ログ)
+    end
+    Note over Cam,INF: **エンドツーエンド遅延最小化**
